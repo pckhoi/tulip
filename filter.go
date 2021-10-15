@@ -30,6 +30,12 @@ func (m *Manager) FindExact(rule ...string) []string {
 	return m.p.Find(rule)
 }
 
+// Filter filters policies
+func (m *Manager) Filter(rule ...string) Policies {
+	return m.p.Filter(rule...)
+}
+
+// Filter filters grouping policies
 func (m *Manager) FilterGroups(rule ...string) Policies {
 	return m.g.Filter(rule...)
 }

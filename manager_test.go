@@ -2,6 +2,7 @@ package tulip
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -22,7 +23,7 @@ func dropDB(t *testing.T, dbname string) {
 	require.NoError(t, conn.Close(ctx))
 }
 
-func retryUntil(t *testing.T, d time.Duration, max int, cond func() bool, msg string) {
+func retryUntil(t *testing.T, d time.Duration, max int, cond func() bool, msg func() string) {
 	t.Helper()
 	for i := 0; i < max; i++ {
 		if cond() {
@@ -30,14 +31,16 @@ func retryUntil(t *testing.T, d time.Duration, max int, cond func() bool, msg st
 		}
 		time.Sleep(d)
 	}
-	t.Fatalf("max retry exceed: %s", msg)
+	t.Fatalf("max retry exceed: %s", msg())
 }
 
 func waitForNotification(t *testing.T, m *Manager, policyCount, groupCount int) {
 	t.Helper()
 	retryUntil(t, 100*time.Millisecond, 10, func() bool {
 		return len(m.p) == policyCount && len(m.g) == groupCount
-	}, "waiting for notification")
+	}, func() string {
+		return fmt.Sprintf("waiting for notification: policyCount = %d groupCount = %d", len(m.p), len(m.g))
+	})
 }
 
 func testAddPolicy(t *testing.T, connStr string, opts []Option) {
@@ -112,6 +115,15 @@ func testFilter(t *testing.T, connStr string, opts []Option) {
 	assert.Nil(t, m.FindExact("a", "c", "d"))
 
 	assert.Equal(t, Policies([][]string{
+		{"b", "a", "d", "", "", ""},
+	}), m.Filter("b"))
+	assert.Equal(t, Policies([][]string{
+		{"a", "b", "c", "", "", ""},
+		{"a", "b", "d", "", "", ""},
+	}), m.Filter("", "b"))
+	assert.Len(t, m.Filter("", "", "b"), 0)
+
+	assert.Equal(t, Policies([][]string{
 		{"a", "b", "c", "", "", ""},
 		{"a", "d", "c", "", "", ""},
 	}), m.FilterGroups("a", "", "c"))
@@ -122,6 +134,9 @@ func testFilter(t *testing.T, connStr string, opts []Option) {
 		{"a", "b", "c"},
 		{"b", "e", "f"},
 	}), 1))
+
+	require.NoError(t, m.RemoveFilteredPolicies([]string{"", "a"}, []string{"b"}))
+	waitForNotification(t, m, 2, 3)
 }
 
 func TestManager(t *testing.T) {

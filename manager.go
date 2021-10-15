@@ -197,7 +197,14 @@ func (m *Manager) LoadPolicies() error {
 }
 
 func policyID(ptype string, rule []string) string {
-	data := strings.Join(append([]string{ptype}, rule...), ",")
+	end := len(rule)
+	for i, s := range rule {
+		if s == "" {
+			end = i
+			break
+		}
+	}
+	data := strings.Join(append([]string{ptype}, rule[:end]...), ",")
 	sum := meow.Checksum(0, []byte(data))
 	return fmt.Sprintf("%x", sum)
 }
@@ -215,6 +222,9 @@ func policyArgs(ptype string, rule []string) []interface{} {
 	l := len(rule)
 	for i := 0; i < 6; i++ {
 		if i < l {
+			if rule[i] == "" {
+				panic(fmt.Errorf("can't insert policy with empty value: ptype was %q, rule was %v", ptype, rule))
+			}
 			row[2+i] = pgtype.Text{
 				String: rule[i],
 				Status: pgtype.Present,
@@ -306,6 +316,19 @@ func (m *Manager) RemovePolicies(pRules, gRules [][]string) error {
 		}
 		return br.Close()
 	})
+}
+
+func (m *Manager) RemoveFilteredPolicies(pPattern, gPattern []string) error {
+	var pRules, gRules [][]string
+	if pPattern != nil {
+		pRules = m.Filter(pPattern...)
+	}
+	if gPattern != nil {
+		gRules = m.FilterGroups(gPattern...)
+	}
+	fmt.Printf("pRules: %v\n", pRules)
+	fmt.Printf("gRules: %v\n", gRules)
+	return m.RemovePolicies(pRules, gRules)
 }
 
 // Close closes all connections and stops all goroutines
