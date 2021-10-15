@@ -10,38 +10,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const triggerFuncQuery = `
-	create or replace function tg_notify_policy ()
-	returns trigger
-	language plpgsql
-	as $$
-		declare
-			channel text := TG_ARGV[0];
-		begin
-			IF (TG_OP = 'DELETE') THEN
-				PERFORM (
-					with payload(op, p_type, rule) as
-					(
-						select TG_OP, OLD.p_type, ARRAY[OLD.v0, OLD.v1, OLD.v2, OLD.v3, OLD.v4, OLD.v5]
-					)
-					select pg_notify(channel, row_to_json(payload)::text)
-					from payload
-				);
-			ELSIF (TG_OP = 'INSERT') THEN
-				PERFORM (
-					with payload(op, p_type, rule) as
-					(
-						select TG_OP, NEW.p_type, ARRAY[NEW.v0, NEW.v1, NEW.v2, NEW.v3, NEW.v4, NEW.v5]
-					)
-					select pg_notify(channel, row_to_json(payload)::text)
-					from payload
-				);
-			END IF;
-			RETURN NULL;
-		end;
-	$$
-`
-
 func (m *Manager) createTrigger() error {
 	ctx, cancel := context.WithTimeout(context.Background(), m.timeout)
 	defer cancel()
