@@ -334,8 +334,6 @@ func (m *Manager) RemoveFilteredPolicies(pPattern, gPattern []string) error {
 	if gPattern != nil {
 		gRules = m.FilterGroups(gPattern...)
 	}
-	fmt.Printf("pRules: %v\n", pRules)
-	fmt.Printf("gRules: %v\n", gRules)
 	return m.RemovePolicies(pRules, gRules)
 }
 

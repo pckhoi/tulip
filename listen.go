@@ -15,6 +15,7 @@ func (m *Manager) createTrigger() error {
 	defer cancel()
 	return m.pool.BeginFunc(ctx, func(tx pgx.Tx) error {
 		b := &pgx.Batch{}
+		b.Queue(fmt.Sprintf("DROP TRIGGER IF EXISTS notify_%s ON %s", m.tableName, m.tableName))
 		b.Queue(fmt.Sprintf(`
 			create or replace function tg_notify_%s ()
 			returns trigger
