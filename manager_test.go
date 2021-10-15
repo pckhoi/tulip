@@ -37,9 +37,9 @@ func retryUntil(t *testing.T, d time.Duration, max int, cond func() bool, msg fu
 func waitForNotification(t *testing.T, m *Manager, policyCount, groupCount int) {
 	t.Helper()
 	retryUntil(t, 100*time.Millisecond, 10, func() bool {
-		return len(m.p) == policyCount && len(m.g) == groupCount
+		return m.PolicyCount() == policyCount && m.GroupingPolicyCount() == groupCount
 	}, func() string {
-		return fmt.Sprintf("waiting for notification: policyCount = %d groupCount = %d", len(m.p), len(m.g))
+		return fmt.Sprintf("waiting for notification: policyCount = %d groupCount = %d", m.PolicyCount(), m.GroupingPolicyCount())
 	})
 }
 

@@ -135,6 +135,14 @@ func WithZapLogger(logger *zap.Logger) Option {
 	}
 }
 
+func (m *Manager) PolicyCount() int {
+	return m.p.Len()
+}
+
+func (m *Manager) GroupingPolicyCount() int {
+	return m.g.Len()
+}
+
 func (m *Manager) periodicallyRefreshPolicies() {
 	for {
 		select {
