@@ -116,9 +116,10 @@ func (m *Manager) listen() {
 			return
 		case obj := <-ch:
 			if m.logger != nil {
-				m.logger.Info("receive pg notification",
+				m.logger.Debug("receive pg notification",
 					zap.String("op", obj.Op),
 					zap.String("ptype", obj.PType),
+					zap.Strings("rule", obj.Rule),
 				)
 			}
 			m.mutex.Lock()

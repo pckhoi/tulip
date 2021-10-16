@@ -150,7 +150,7 @@ func (m *Manager) periodicallyRefreshPolicies() {
 			return
 		case <-m.ticker.C:
 			if m.logger != nil {
-				m.logger.Info("policies before refresh",
+				m.logger.Debug("policies before refresh",
 					zap.Int("policy_count", len(m.p)),
 					zap.Int("group_count", len(m.g)),
 				)
@@ -196,7 +196,7 @@ func (m *Manager) LoadPolicies() error {
 	sort.Sort(m.p)
 	sort.Sort(m.g)
 	if m.logger != nil {
-		m.logger.Info("loaded policies",
+		m.logger.Debug("loaded policies",
 			zap.Int("policy_count", len(m.p)),
 			zap.Int("group_count", len(m.g)),
 		)
